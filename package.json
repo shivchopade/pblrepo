@@ -1,0 +1,13 @@
+{
+  "name": "emergency-shake-detector",
+  "version": "1.0.0",
+  "description": "Mobile-friendly website that detects shake gestures and initiates emergency calls",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "twilio": "^4.19.0"
+  }
+} 
