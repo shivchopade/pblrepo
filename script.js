@@ -7,7 +7,7 @@ const TWILIO_CONFIG = {
 };
 
 // Shake detection configuration
-const SHAKE_THRESHOLD = 1999; // Adjust this value to change sensitivity
+const SHAKE_THRESHOLD = 2999; // Adjust this value to change sensitivity
 let lastUpdate = 5;
 let lastX = 5;
 let lastY = 5;
