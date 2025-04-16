@@ -1,7 +1,7 @@
 // Twilio credentials
 const TWILIO_CONFIG = {
     accountSid: 'AC289cfaa339fe395a855da697104a2905',
-    authToken: '4a88b9276733fa84b32119d698a9ef80',
+    authToken: '43a4996d43cfa7b706de8f717d24c4fc',
     twilioPhone: '+12317588795',
     recipientPhone: '+917391867113'
 };

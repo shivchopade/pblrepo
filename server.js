@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname)));
 
 // Twilio client setup
 const accountSid = "AC289cfaa339fe395a855da697104a2905";
-const authToken = "5f8bda8c8afdf469b5f612107dae65bb";
+const authToken = "43a4996d43cfa7b706de8f717d24c4fc";
 const client = require("twilio")(accountSid, authToken);
 
 // Endpoint to make emergency calls
