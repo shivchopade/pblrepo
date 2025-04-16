@@ -1,25 +1,33 @@
 // Twilio credentials
 const TWILIO_CONFIG = {
-    accountSid: 'ACf4ec5a08137c107e675236afabebc6d4',
-    authToken: '61151c1d3d1c812272424f7730fd3016',
-    twilioPhone: '+12696993286',
-    twilioFlowSid: 'FWcd221f80b752368dddc89aa58a15ac56'
+    accountSid: 'AC289cfaa339fe395a855da697104a2905',
+    authToken: '4a88b9276733fa84b32119d698a9ef80',
+    twilioPhone: '+12317588795',
+    recipientPhone: '+917391867113'
 };
 
 // Shake detection configuration
-const SHAKE_THRESHOLD = 2999; // Adjust this value to change sensitivity
+const SHAKE_THRESHOLD = 3999; // Adjust this value to change sensitivity
 let lastUpdate = 5;
 let lastX = 5;
 let lastY = 5;
 let lastZ = 5;
 let shakeTimeout;
 
-
+// Emergency state tracking
+let emergencyInProgress = false;
 
 // DOM elements
 const statusElement = document.getElementById('status');
 const shakeIndicator = document.getElementById('shake-indicator');
 const testCallButton = document.getElementById('test-call');
+const confirmationDialog = document.getElementById('confirmation-dialog');
+const timerElement = document.getElementById('timer');
+const imOkayButton = document.getElementById('im-okay-btn');
+const overlay = document.getElementById('overlay');
+
+let emergencyTimer;
+let secondsLeft = 10;
 
 // Initialize shake detection
 function initShakeDetection() {
@@ -33,6 +41,9 @@ function initShakeDetection() {
 
 // Handle device motion
 function handleMotion(event) {
+    // Don't process motion events if emergency is already in progress
+    if (emergencyInProgress) return;
+    
     const current = event.accelerationIncludingGravity;
     const currentTime = new Date().getTime();
     
@@ -58,24 +69,33 @@ function handleMotion(event) {
 
 // Visual feedback for shake detection
 function showShakeFeedback() {
-    shakeIndicator.classList.add('active');
-    statusElement.textContent = 'Detected! Initiating emergency call...';
+    // Set emergency in progress to prevent multiple triggers
+    emergencyInProgress = true;
     
-    setTimeout(() => {
-        shakeIndicator.classList.remove('active');
-        statusElement.textContent = 'Detection active - trigger emergency call';
-    }, 2000);
+    shakeIndicator.classList.add('active');
+    statusElement.textContent = 'Emergency detected! Please confirm if you\'re okay.';
+    overlay.classList.remove('hidden');
+    confirmationDialog.classList.remove('hidden');
+    startEmergencyTimer();
 }
 
 // Make emergency call using Twilio
 async function makeEmergencyCall() {
+    // Prevent multiple calls
+    if (!emergencyInProgress) return;
+    
     try {
-        const response = await fetch('/make-call', {
+        const response = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + TWILIO_CONFIG.accountSid + '/Calls.json', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Basic ' + btoa(TWILIO_CONFIG.accountSid + ':' + TWILIO_CONFIG.authToken)
             },
-            body: JSON.stringify(TWILIO_CONFIG)
+            body: new URLSearchParams({
+                'To': TWILIO_CONFIG.recipientPhone,
+                'From': TWILIO_CONFIG.twilioPhone,
+                'Url': 'http://demo.twilio.com/docs/voice.xml'
+            })
         });
         
         if (response.ok) {
@@ -86,17 +106,61 @@ async function makeEmergencyCall() {
     } catch (error) {
         console.error('Error making emergency call:', error);
         statusElement.textContent = 'Failed to initiate emergency call. Please try again.';
+        // Reset emergency state if call fails
+        setTimeout(() => {
+            emergencyInProgress = false;
+        }, 5000);
     }
 }
+
+// Start emergency timer
+function startEmergencyTimer() {
+    // Clear any existing timer to prevent multiple timers
+    if (emergencyTimer) {
+        clearInterval(emergencyTimer);
+    }
+    
+    secondsLeft = 10;
+    timerElement.textContent = secondsLeft;
+    
+    emergencyTimer = setInterval(() => {
+        secondsLeft--;
+        timerElement.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            clearInterval(emergencyTimer);
+            confirmationDialog.classList.add('hidden');
+            overlay.classList.add('hidden');
+            statusElement.textContent = 'Emergency detected! Making emergency call...';
+            makeEmergencyCall();
+            
+            // Reset emergency state after call is made and a cooldown period
+            setTimeout(() => {
+                emergencyInProgress = false;
+                statusElement.textContent = 'Detection active - trigger emergency call';
+            }, 10000); // 10 second cooldown after call
+        }
+    }, 1000);
+}
+
+// Handle 'I'm Okay' button click
+imOkayButton.addEventListener('click', () => {
+    clearInterval(emergencyTimer);
+    confirmationDialog.classList.add('hidden');
+    overlay.classList.add('hidden');
+    statusElement.textContent = 'Detection active - trigger emergency call';
+    shakeIndicator.classList.remove('active');
+    
+    // Reset emergency state after a short delay to prevent immediate re-triggering
+    setTimeout(() => {
+        emergencyInProgress = false;
+    }, 2000);
+});
 
 // Trigger emergency call with debounce
 function triggerEmergencyCall() {
     clearTimeout(shakeTimeout);
     showShakeFeedback();
-    
-    shakeTimeout = setTimeout(() => {
-        makeEmergencyCall();
-    }, 1000);
 }
 
 // Test call button handler

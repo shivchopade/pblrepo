@@ -7,14 +7,20 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="overlay" class="overlay hidden"></div>
     <div class="container">
         <h1>Emergency Detector</h1>
         <div class="status-container">
             <p id="status">Emergency call</p>
             <div id="shake-indicator" class="shake-indicator"></div>
+            <div id="confirmation-dialog" class="confirmation-dialog hidden">
+                <p>Emergency detected! Are you okay?</p>
+                <p id="timer">10</p>
+                <button id="im-okay-btn" class="button">I'm Okay</button>
+            </div>
         </div>
         <div class="info">
-            <p> sensitivity: <span id="sensitivity">Medium</span></p>
+            <p> Alertify: <span id="sensitivity">Save Lifes</span></p>
             <button id="test-call" class="button">Test Call</button>
         </div>
     </div>
